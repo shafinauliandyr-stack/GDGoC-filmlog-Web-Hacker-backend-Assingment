@@ -7,96 +7,96 @@
 // 1. STATE MANAGEMENT
 // ==========================================
 const state = {
-  apiBaseUrl: localStorage.getItem('filmlog_api_url') || 'http://localhost:8000/api',
-  token: localStorage.getItem('filmlog_token') || null,
-  user: JSON.parse(localStorage.getItem('filmlog_user') || 'null'),
-  currentTab: 'discover',
-  authMode: 'login', // 'login' | 'register'
-  allMovies: [],
-  filteredMovies: [],
-  watchlist: [], // Array of movie objects or IDs
-  watchedList: [], // Array of watched review items
-  selectedGenre: 'ALL',
-  searchQuery: '',
-  activeDetailMovie: null,
-  logs: []
+    apiBaseUrl: localStorage.getItem('filmlog_api_url') || 'http://localhost:8000/api',
+    token: localStorage.getItem('filmlog_token') || null,
+    user: JSON.parse(localStorage.getItem('filmlog_user') || 'null'),
+    currentTab: 'discover',
+    authMode: 'login', // 'login' | 'register'
+    allMovies: [],
+    filteredMovies: [],
+    watchlist: [], // Array of movie objects or IDs
+    watchedList: [], // Array of watched review items
+    selectedGenre: 'ALL',
+    searchQuery: '',
+    activeDetailMovie: null,
+    logs: []
 };
 
 // ==========================================
 // 2. HTTP CLIENT & NETWORK INSPECTOR
 // ==========================================
 async function apiFetch(endpoint, options = {}) {
-  const url = `${state.apiBaseUrl.replace(/\/$/, '')}/${endpoint.replace(/^\//, '')}`;
-  const method = options.method || 'GET';
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(options.headers || {})
-  };
+    const url = `${state.apiBaseUrl.replace(/\/$/, '')}/${endpoint.replace(/^\//, '')}`;
+    const method = options.method || 'GET';
+    const headers = {
+        'Content-Type': 'application/json',
+        ...(options.headers || {})
+    };
 
-  if (state.token) {
-    headers['Authorization'] = `Bearer ${state.token}`;
-  }
-
-  const startTime = performance.now();
-  let status = 0;
-  let responseData = null;
-  let ok = false;
-
-  try {
-    const res = await fetch(url, {
-      ...options,
-      headers
-    });
-    status = res.status;
-    ok = res.ok;
-
-    const contentType = res.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      responseData = await res.json();
-    } else {
-      responseData = await res.text();
+    if (state.token) {
+        headers['Authorization'] = `Bearer ${state.token}`;
     }
 
-    logApiRequest({
-      time: new Date().toLocaleTimeString(),
-      method,
-      url,
-      status,
-      ok,
-      duration: Math.round(performance.now() - startTime)
-    });
+    const startTime = performance.now();
+    let status = 0;
+    let responseData = null;
+    let ok = false;
 
-    if (!ok) {
-      const errorMsg = (typeof responseData === 'object' && (responseData.message || responseData.error))
-        ? (responseData.message || responseData.error)
-        : `Request failed with status ${status}`;
-      throw new Error(errorMsg);
-    }
+    try {
+        const res = await fetch(url, {
+            ...options,
+            headers
+        });
+        status = res.status;
+        ok = res.ok;
 
-    return responseData;
-  } catch (err) {
-    if (status === 0) {
-      logApiRequest({
-        time: new Date().toLocaleTimeString(),
-        method,
-        url,
-        status: 'CORS/ERR',
-        ok: false,
-        duration: Math.round(performance.now() - startTime)
-      });
+        const contentType = res.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            responseData = await res.json();
+        } else {
+            responseData = await res.text();
+        }
+
+        logApiRequest({
+            time: new Date().toLocaleTimeString(),
+            method,
+            url,
+            status,
+            ok,
+            duration: Math.round(performance.now() - startTime)
+        });
+
+        if (!ok) {
+            const errorMsg = (typeof responseData === 'object' && (responseData.message || responseData.error)) ?
+                (responseData.message || responseData.error) :
+                `Request failed with status ${status}`;
+            throw new Error(errorMsg);
+        }
+
+        return responseData;
+    } catch (err) {
+        if (status === 0) {
+            logApiRequest({
+                time: new Date().toLocaleTimeString(),
+                method,
+                url,
+                status: 'CORS/ERR',
+                ok: false,
+                duration: Math.round(performance.now() - startTime)
+            });
+        }
+        throw err;
     }
-    throw err;
-  }
 }
 
 function logApiRequest(logItem) {
-  state.logs.unshift(logItem);
-  if (state.logs.length > 20) state.logs.pop();
+    state.logs.unshift(logItem);
+    if (state.logs.length > 20) state.logs.pop();
 
-  const container = document.getElementById('logs-content');
-  if (!container) return;
+    const container = document.getElementById('logs-content');
+    if (!container) return;
 
-  container.innerHTML = state.logs.map(l => `
+    container.innerHTML = state.logs.map(l => `
     <div class="flex items-center justify-between py-1 border-b border-brand-border/40">
       <div class="flex items-center gap-2 overflow-hidden">
         <span class="text-[10px] px-1.5 py-0.5 rounded font-bold ${
@@ -114,183 +114,183 @@ function logApiRequest(logItem) {
 }
 
 function toggleLogsDrawer() {
-  const content = document.getElementById('logs-content');
-  const icon = document.getElementById('log-drawer-icon');
-  const text = document.getElementById('log-drawer-text');
-  const isHidden = content.classList.contains('hidden');
+    const content = document.getElementById('logs-content');
+    const icon = document.getElementById('log-drawer-icon');
+    const text = document.getElementById('log-drawer-text');
+    const isHidden = content.classList.contains('hidden');
 
-  if (isHidden) {
-    content.classList.remove('hidden');
-    icon.style.transform = 'rotate(180deg)';
-    text.textContent = 'Hide Logs';
-  } else {
-    content.classList.add('hidden');
-    icon.style.transform = 'rotate(0deg)';
-    text.textContent = 'Show Logs';
-  }
+    if (isHidden) {
+        content.classList.remove('hidden');
+        icon.style.transform = 'rotate(180deg)';
+        text.textContent = 'Hide Logs';
+    } else {
+        content.classList.add('hidden');
+        icon.style.transform = 'rotate(0deg)';
+        text.textContent = 'Show Logs';
+    }
 }
 
 // ==========================================
 // 3. INITIALIZATION
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
-  lucide.createIcons();
-  updateApiUrlDisplay();
-  renderAuthUI();
-  loadDiscoverMovies();
-  if (state.token) {
-    loadWatchlist();
-    loadWatchedList();
-  }
+    lucide.createIcons();
+    updateApiUrlDisplay();
+    renderAuthUI();
+    loadDiscoverMovies();
+    if (state.token) {
+        loadWatchlist();
+        loadWatchedList();
+    }
 });
 
 function updateApiUrlDisplay() {
-  const display = document.getElementById('api-url-display');
-  const input = document.getElementById('api-base-url-input');
-  if (display) display.textContent = state.apiBaseUrl;
-  if (input) input.value = state.apiBaseUrl;
+    const display = document.getElementById('api-url-display');
+    const input = document.getElementById('api-base-url-input');
+    if (display) display.textContent = state.apiBaseUrl;
+    if (input) input.value = state.apiBaseUrl;
 }
 
 // ==========================================
 // 4. TAB NAVIGATION
 // ==========================================
 function switchTab(tabId) {
-  state.currentTab = tabId;
+    state.currentTab = tabId;
 
-  // Update tabs UI
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-  const activeSection = document.getElementById(`tab-${tabId}`);
-  if (activeSection) activeSection.classList.remove('hidden');
+    // Update tabs UI
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    const activeSection = document.getElementById(`tab-${tabId}`);
+    if (activeSection) activeSection.classList.remove('hidden');
 
-  // Update desktop nav buttons
-  document.querySelectorAll('.nav-tab').forEach(btn => {
-    btn.classList.remove('text-white', 'bg-brand-card');
-    btn.classList.add('text-brand-muted');
-  });
-  const activeNav = document.getElementById(`nav-${tabId}`);
-  if (activeNav) {
-    activeNav.classList.remove('text-brand-muted');
-    activeNav.classList.add('text-white', 'bg-brand-card');
-  }
-
-  // Refresh tab data if needed
-  if (tabId === 'watchlist') {
-    if (!state.token) {
-      showToast('Silakan login terlebih dahulu untuk melihat Watchlist', 'info');
-      openAuthModal('login');
-      return;
+    // Update desktop nav buttons
+    document.querySelectorAll('.nav-tab').forEach(btn => {
+        btn.classList.remove('text-white', 'bg-brand-card');
+        btn.classList.add('text-brand-muted');
+    });
+    const activeNav = document.getElementById(`nav-${tabId}`);
+    if (activeNav) {
+        activeNav.classList.remove('text-brand-muted');
+        activeNav.classList.add('text-white', 'bg-brand-card');
     }
-    loadWatchlist();
-  } else if (tabId === 'watched') {
-    if (!state.token) {
-      showToast('Silakan login terlebih dahulu untuk melihat Watched list', 'info');
-      openAuthModal('login');
-      return;
-    }
-    loadWatchedList();
-  }
 
-  lucide.createIcons();
+    // Refresh tab data if needed
+    if (tabId === 'watchlist') {
+        if (!state.token) {
+            showToast('Silakan login terlebih dahulu untuk melihat Watchlist', 'info');
+            openAuthModal('login');
+            return;
+        }
+        loadWatchlist();
+    } else if (tabId === 'watched') {
+        if (!state.token) {
+            showToast('Silakan login terlebih dahulu untuk melihat Watched list', 'info');
+            openAuthModal('login');
+            return;
+        }
+        loadWatchedList();
+    }
+
+    lucide.createIcons();
 }
 
 // ==========================================
 // 5. MOVIES (DISCOVER)
 // ==========================================
 async function loadDiscoverMovies(shuffle = false) {
-  const statusEl = document.getElementById('movie-grid-status');
-  const gridEl = document.getElementById('movie-grid');
-  statusEl.classList.remove('hidden');
+    const statusEl = document.getElementById('movie-grid-status');
+    const gridEl = document.getElementById('movie-grid');
+    statusEl.classList.remove('hidden');
 
-  try {
-    // Try fetching from applicant's backend: GET /api/movies
-    const data = await apiFetch('/movies');
-    // Normalize response: could be array or { data: [...] }
-    state.allMovies = Array.isArray(data) ? data : (data.data || data.movies || []);
-    
-    if (shuffle) {
-      state.allMovies.sort(() => Math.random() - 0.5);
-      showToast('Daftar film berhasil diacak (shuffle)!', 'success');
-    }
-
-    applyMovieFilters();
-    statusEl.classList.add('hidden');
-    document.getElementById('api-status-dot').className = 'w-2 h-2 rounded-full bg-emerald-400';
-  } catch (err) {
-    statusEl.classList.add('hidden');
-    document.getElementById('api-status-dot').className = 'w-2 h-2 rounded-full bg-rose-500';
-
-    // Fallback: If backend is not running, load local static seed so applicant can see UI layout
-    console.warn('Backend not reachable, loading fallback local seed:', err.message);
     try {
-      const fallbackRes = await fetch('../data/movies.json');
-      state.allMovies = await fallbackRes.json();
-      if (shuffle) state.allMovies.sort(() => Math.random() - 0.5);
-      applyMovieFilters();
-      showToast('⚠️ Backend belum aktif. Menampilkan data lokal (fallback). Pastikan server backend Anda berjalan di ' + state.apiBaseUrl, 'warning');
-    } catch (fallbackErr) {
-      gridEl.innerHTML = `
+        // Try fetching from applicant's backend: GET /api/movies
+        const data = await apiFetch('/movies');
+        // Normalize response: could be array or { data: [...] }
+        state.allMovies = Array.isArray(data) ? data : (data.data || data.movies || []);
+
+        if (shuffle) {
+            state.allMovies.sort(() => Math.random() - 0.5);
+            showToast('Daftar film berhasil diacak (shuffle)!', 'success');
+        }
+
+        applyMovieFilters();
+        statusEl.classList.add('hidden');
+        document.getElementById('api-status-dot').className = 'w-2 h-2 rounded-full bg-emerald-400';
+    } catch (err) {
+        statusEl.classList.add('hidden');
+        document.getElementById('api-status-dot').className = 'w-2 h-2 rounded-full bg-rose-500';
+
+        // Fallback: If backend is not running, load local static seed so applicant can see UI layout
+        console.warn('Backend not reachable, loading fallback local seed:', err.message);
+        try {
+            const fallbackRes = await fetch('../data/movies.json');
+            state.allMovies = await fallbackRes.json();
+            if (shuffle) state.allMovies.sort(() => Math.random() - 0.5);
+            applyMovieFilters();
+            showToast('⚠️ Backend belum aktif. Menampilkan data lokal (fallback). Pastikan server backend Anda berjalan di ' + state.apiBaseUrl, 'warning');
+        } catch (fallbackErr) {
+            gridEl.innerHTML = `
         <div class="col-span-full py-12 text-center text-rose-400 bg-rose-950/20 border border-rose-900/40 rounded-xl p-6">
           <p class="font-bold mb-1">Gagal terhubung ke backend (${state.apiBaseUrl})</p>
           <p class="text-xs text-brand-muted">Pastikan server backend Anda menyala dan mengizinkan CORS.</p>
         </div>
       `;
+        }
     }
-  }
 }
 
 function handleMovieFilter() {
-  state.searchQuery = document.getElementById('movie-search').value.toLowerCase().trim();
-  applyMovieFilters();
+    state.searchQuery = document.getElementById('movie-search').value.toLowerCase().trim();
+    applyMovieFilters();
 }
 
 function filterByGenre(genre) {
-  state.selectedGenre = genre;
-  document.querySelectorAll('.genre-btn').forEach(btn => {
-    if (btn.innerText.trim() === genre || (genre === 'ALL' && btn.innerText.includes('All'))) {
-      btn.className = 'genre-btn px-3 py-1.5 rounded-full bg-white text-black font-semibold';
-    } else {
-      btn.className = 'genre-btn px-3 py-1.5 rounded-full bg-brand-surface border border-brand-border text-brand-muted hover:text-white';
-    }
-  });
-  applyMovieFilters();
+    state.selectedGenre = genre;
+    document.querySelectorAll('.genre-btn').forEach(btn => {
+        if (btn.innerText.trim() === genre || (genre === 'ALL' && btn.innerText.includes('All'))) {
+            btn.className = 'genre-btn px-3 py-1.5 rounded-full bg-white text-black font-semibold';
+        } else {
+            btn.className = 'genre-btn px-3 py-1.5 rounded-full bg-brand-surface border border-brand-border text-brand-muted hover:text-white';
+        }
+    });
+    applyMovieFilters();
 }
 
 function applyMovieFilters() {
-  state.filteredMovies = state.allMovies.filter(movie => {
-    const matchesSearch = !state.searchQuery || 
-      movie.title.toLowerCase().includes(state.searchQuery) ||
-      (movie.director && movie.director.toLowerCase().includes(state.searchQuery));
+    state.filteredMovies = state.allMovies.filter(movie => {
+        const matchesSearch = !state.searchQuery ||
+            movie.title.toLowerCase().includes(state.searchQuery) ||
+            (movie.director && movie.director.toLowerCase().includes(state.searchQuery));
 
-    let movieGenres = Array.isArray(movie.genres) ? movie.genres : (movie.genres ? movie.genres.split(',') : []);
-    movieGenres = movieGenres.map(g => g.trim());
+        let movieGenres = Array.isArray(movie.genres) ? movie.genres : (movie.genres ? movie.genres.split(',') : []);
+        movieGenres = movieGenres.map(g => g.trim());
 
-    const matchesGenre = state.selectedGenre === 'ALL' || movieGenres.includes(state.selectedGenre);
+        const matchesGenre = state.selectedGenre === 'ALL' || movieGenres.includes(state.selectedGenre);
 
-    return matchesSearch && matchesGenre;
-  });
+        return matchesSearch && matchesGenre;
+    });
 
-  renderMovieGrid();
+    renderMovieGrid();
 }
 
 function renderMovieGrid() {
-  const gridEl = document.getElementById('movie-grid');
-  if (!gridEl) return;
+    const gridEl = document.getElementById('movie-grid');
+    if (!gridEl) return;
 
-  if (state.filteredMovies.length === 0) {
-    gridEl.innerHTML = `
+    if (state.filteredMovies.length === 0) {
+        gridEl.innerHTML = `
       <div class="col-span-full py-16 text-center text-brand-muted">
         <p class="text-base font-semibold text-white">Tidak ada film yang cocok</p>
         <p class="text-xs mt-1">Coba ubah kata kunci pencarian atau filter genre.</p>
       </div>
     `;
-    return;
-  }
+        return;
+    }
 
-  gridEl.innerHTML = state.filteredMovies.map(movie => {
-    const isWatchlisted = isMovieInWatchlist(movie.id);
-    const poster = movie.poster_url || 'https://via.placeholder.com/300x450/1e242b/8996a6?text=No+Poster';
+    gridEl.innerHTML = state.filteredMovies.map(movie => {
+        const isWatchlisted = isMovieInWatchlist(movie.id);
+        const poster = movie.poster_url || 'https://via.placeholder.com/300x450/1e242b/8996a6?text=No+Poster';
 
-    return `
+        return `
       <div class="poster-hover group relative bg-brand-card rounded-xl overflow-hidden border border-brand-border/70 hover:border-brand-green/60 transition-all duration-300 hover:shadow-xl hover:shadow-brand-green/10 flex flex-col">
         <!-- Poster & Hover Overlay -->
         <div class="relative aspect-[2/3] w-full overflow-hidden bg-brand-dark cursor-pointer" onclick="openMovieDetail(${movie.id})">
@@ -325,42 +325,42 @@ function renderMovieGrid() {
         </div>
       </div>
     `;
-  }).join('');
+    }).join('');
 
-  lucide.createIcons();
+    lucide.createIcons();
 }
 
 function isMovieInWatchlist(movieId) {
-  return state.watchlist.some(item => {
-    const id = item.movie_id || item.movieId || item.id || item;
-    return String(id) === String(movieId);
-  });
+    return state.watchlist.some(item => {
+        const id = item.movie_id || item.movieId || item.id || item;
+        return String(id) === String(movieId);
+    });
 }
 
 // ==========================================
 // 6. MOVIE DETAIL MODAL
 // ==========================================
 async function openMovieDetail(movieId) {
-  let movie = state.allMovies.find(m => String(m.id) === String(movieId));
+    let movie = state.allMovies.find(m => String(m.id) === String(movieId));
 
-  // If detail isn't full, try calling backend: GET /api/movies/:id
-  try {
-    const remoteMovie = await apiFetch(`/movies/${movieId}`);
-    if (remoteMovie) movie = remoteMovie.data || remoteMovie;
-  } catch (err) {
-    // If endpoint not ready, fall back to existing movie in state
-  }
+    // If detail isn't full, try calling backend: GET /api/movies/:id
+    try {
+        const remoteMovie = await apiFetch(`/movies/${movieId}`);
+        if (remoteMovie) movie = remoteMovie.data || remoteMovie;
+    } catch (err) {
+        // If endpoint not ready, fall back to existing movie in state
+    }
 
-  if (!movie) return;
-  state.activeDetailMovie = movie;
+    if (!movie) return;
+    state.activeDetailMovie = movie;
 
-  const isWatchlisted = isMovieInWatchlist(movie.id);
-  const poster = movie.poster_url || 'https://via.placeholder.com/300x450';
-  let genres = Array.isArray(movie.genres) ? movie.genres : (movie.genres ? movie.genres.split(',') : []);
-  let cast = Array.isArray(movie.cast) ? movie.cast : (movie.cast_members ? movie.cast_members.split(',') : []);
+    const isWatchlisted = isMovieInWatchlist(movie.id);
+    const poster = movie.poster_url || 'https://via.placeholder.com/300x450';
+    let genres = Array.isArray(movie.genres) ? movie.genres : (movie.genres ? movie.genres.split(',') : []);
+    let cast = Array.isArray(movie.cast) ? movie.cast : (movie.cast_members ? movie.cast_members.split(',') : []);
 
-  const contentEl = document.getElementById('modal-detail-content');
-  contentEl.innerHTML = `
+    const contentEl = document.getElementById('modal-detail-content');
+    contentEl.innerHTML = `
     <div class="flex flex-col sm:flex-row gap-6">
       <!-- Poster -->
       <div class="w-full sm:w-52 shrink-0">
@@ -398,7 +398,7 @@ async function openMovieDetail(movieId) {
           </div>
         ` : ''}
 
-        <!-- Actions -->
+         <!-- Actions -->
         <div class="pt-4 border-t border-brand-border flex items-center gap-3">
           <button onclick="toggleWatchlist(${movie.id})" class="flex-1 py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition ${
             isWatchlisted ? 'bg-rose-600 hover:bg-rose-500 text-white' : 'bg-brand-green text-black hover:brightness-110'
@@ -407,11 +407,32 @@ async function openMovieDetail(movieId) {
             <span>${isWatchlisted ? 'Remove from Watchlist' : 'Add to Watchlist'}</span>
           </button>
 
-          <button onclick="closeMovieDetailModal(); openWatchedModal(${movie.id})" class="py-2.5 px-4 rounded-xl font-bold text-xs bg-brand-surfaceHover hover:bg-amber-400 hover:text-black border border-brand-border text-white flex items-center justify-center gap-2 transition">
+          <button onclick="openWatchedModal(${movie.id})" class="py-2.5 px-4 rounded-xl font-bold text-xs bg-brand-surfaceHover hover:bg-amber-400 hover:text-black border border-brand-border text-white flex items-center justify-center gap-2 transition">
             <i data-lucide="star" class="w-4 h-4"></i>
             <span>Log Review</span>
           </button>
         </div>
+
+        <!-- Tambahan Upgrade: Daftar Review dari Semua User -->
+        <div class="pt-4 border-t border-brand-border space-y-2">
+          <h4 class="text-xs font-bold text-brand-muted uppercase tracking-wider">
+            Community Reviews (${(movie.reviews && movie.reviews.length) || 0})
+          </h4>
+          ${movie.reviews && movie.reviews.length > 0 ? `
+            <div class="space-y-2 max-h-40 overflow-y-auto pr-1">
+              ${movie.reviews.map(rev => `
+                <div class="bg-brand-dark/60 border border-brand-border/50 rounded-xl p-2.5 text-xs">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="font-bold text-brand-green">@${rev.username}</span>
+                    <span class="text-amber-400 font-bold">${'★'.repeat(rev.rating)}${'☆'.repeat(5 - rev.rating)}</span>
+                  </div>
+                  <p class="text-gray-300 italic">"${rev.review || 'Tanpa komentar.'}"</p>
+                </div>
+              `).join('')}
+            </div>
+          ` : `<p class="text-xs text-brand-muted italic">Belum ada ulasan untuk film ini.</p>`}
+        </div>
+
       </div>
     </div>
   `;

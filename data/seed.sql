@@ -1,12 +1,9 @@
--- Seed Data for Movies Table
--- Compatible with PostgreSQL and MySQL / SQLite
-
 CREATE TABLE IF NOT EXISTS movies (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     year INT NOT NULL,
     director VARCHAR(255) NOT NULL,
-    genres TEXT NOT NULL, -- Stored as comma-separated or JSON
+    genres TEXT NOT NULL, 
     rating DECIMAL(3, 1) NOT NULL,
     duration VARCHAR(50) NOT NULL,
     synopsis TEXT NOT NULL,
@@ -35,4 +32,14 @@ INSERT INTO movies (id, title, year, director, genres, rating, duration, synopsi
 (18, 'Dune', 2021, 'Denis Villeneuve', 'Sci-Fi,Adventure', 8.0, '155 min', 'Paul Atreides, pemuda berbakat yang ditakdirkan untuk takdir yang melampaui pemahamannya, harus melakukan perjalanan ke planet paling berbahaya di alam semesta demi memastikan masa depan keluarga dan bangsanya.', 'https://image.tmdb.org/t/p/w500/d5NXSklXo0qyIYkgV94XAgMIckC.jpg', 'Timothée Chalamet, Rebecca Ferguson, Oscar Isaac, Zendaya'),
 (19, 'Oppenheimer', 2023, 'Christopher Nolan', 'Drama,History,Biography', 8.9, '180 min', 'Kisah fisikawan teoretis J. Robert Oppenheimer yang memimpin Proyek Manhattan di Los Alamos untuk mengembangkan bom atom pertama di dunia selama Perang Dunia II, dan dilema moral yang menghantuinya setelah itu.', 'https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg', 'Cillian Murphy, Emily Blunt, Matt Damon, Robert Downey Jr.'),
 (20, 'Goodfellas', 1990, 'Martin Scorsese', 'Crime,Drama', 8.7, '145 min', 'Kisah nyata Henry Hill yang sejak remaja bercita-cita menjadi gangster, naik pangkat melalui hierarki kejahatan terorganisir di New York, hingga akhirnya terjerumus dalam lingkaran kecurigaan dan bahaya narkotika.', 'https://image.tmdb.org/t/p/w500/aKuFiU82s5ISJpGZp7YkIr3kCUd.jpg', 'Robert De Niro, Ray Liotta, Joe Pesci, Lorraine Bracco')
-ON CONFLICT (id) DO NOTHING;
+;
+CREATE TABLE IF NOT EXISTS reviews (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    movie_id INT NOT NULL,
+    rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    review TEXT,
+    watched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE
+);
