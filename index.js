@@ -4,7 +4,7 @@ const cors = require('cors');
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { GoogleGenAI } = require('@google/genai');
+const { GoogleGenAI, Type } = require('@google/genai');
 const ai = new GoogleGenAI({});
 
 const app = express();
@@ -34,6 +34,10 @@ db.getConnection()
     .catch(err => {
         console.error("❌ Gagal terhubung ke database:", err.message);
     });
+
+app.get('/', (req, res) => {
+    res.status(200).json({ status: "online", message: "Server FilmLog Backend Aktif!" });
+});
 
 // 3. DAFTAR RUTE API (ENDPOINTS)
 app.get('/api/test', (req, res) => {
@@ -389,6 +393,6 @@ Tugasmu: Pilih SATU film yang paling cocok HANYA dari daftar di atas. Kembalikan
     }
 });
 // 4. MENYALAKAN SERVER
-app.listen(PORT, () => {
-    console.log(`🚀 Server backend menyala di http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server backend menyala di port ${PORT}`);
 });
